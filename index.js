@@ -152,10 +152,34 @@ async function run() {
       const result = await classesCollection.find().toArray();
       res.send(result); 
     });
-
+    //insert class
     app.post('/classes',verifyJWT,verifyinstractor, async(req,res) => {
       const newItem = req.body;
       const result = await classesCollection.insertOne(newItem);
+      res.send(result);
+    });
+    //change status to accepted
+    app.patch('/class/approved/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) }
+      const updateDoc = {
+        $set: {
+          status: 'Approved'
+        },
+      };
+      const result = await classesCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+    //change status to denied
+    app.patch('/class/denied/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) }
+      const updateDoc = {
+        $set: {
+          status: 'Denied'
+        },
+      };
+      const result = await classesCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
 
