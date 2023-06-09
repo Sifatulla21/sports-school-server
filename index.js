@@ -87,7 +87,20 @@ async function run() {
       const user = await usersCollection.findOne(query);
       const result = { admin: user?.role === 'admin' }
       res.send(result);
-    })
+    });
+     // check instractor
+     app.get('/users/instractor/:email', verifyJWT, async (req, res) => {
+      const email = req.params.email;
+
+      if (req.decoded.email !== email) {
+        res.send({ instractor: false })
+      }
+
+      const query = { email: email }
+      const user = await usersCollection.findOne(query);
+      const result = { instractor: user?.role === 'instractor' }
+      res.send(result);
+    });
 
     //make admin
     app.patch('/users/admin/:id', async (req, res) => {
