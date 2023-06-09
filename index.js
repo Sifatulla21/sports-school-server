@@ -41,6 +41,7 @@ async function run() {
   try {
 
     const usersCollection = client.db("sportsSchool").collection("users");
+    const classesCollection = client.db("sportsSchool").collection("classes");
 
     app.post('/jwt', (req, res) => {
       const user = req.body;
@@ -142,6 +143,19 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await usersCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    //class related apis
+    //load all classes on admin
+    app.get('/classes',verifyJWT,verifyAdmin, async (req, res) => {
+      const result = await classesCollection.find().toArray();
+      res.send(result); 
+    });
+
+    app.post('/classes',verifyJWT,verifyinstractor, async(req,res) => {
+      const newItem = req.body;
+      const result = await classesCollection.insertOne(newItem);
       res.send(result);
     });
 
