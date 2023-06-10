@@ -42,6 +42,7 @@ async function run() {
 
     const usersCollection = client.db("sportsSchool").collection("users");
     const classesCollection = client.db("sportsSchool").collection("classes");
+    const selectedClassesCollection = client.db("sportsSchool").collection("selected-classes");
 
     app.post('/jwt', (req, res) => {
       const user = req.body;
@@ -187,6 +188,7 @@ async function run() {
       const result = await classesCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
+    // get data to instractor
     app.get('/myclasses',verifyJWT,verifyinstructor, async (req, res) => {
       const email = req.query.email;
       if(req.decoded.email === email){
@@ -195,6 +197,7 @@ async function run() {
         res.send(result);
       }
     });
+    // set feedback
     app.patch('/class/feedback/:id/feedback', async (req, res) => {
       const id = req.params.id;
       const feedback = req.body;
@@ -208,12 +211,31 @@ async function run() {
       const result = await classesCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
+    // get all classes
     app.get('/allclasses', async (req, res) => {
       const result = await classesCollection.find({ status: 'Approved' }).toArray();
       res.send(result);
     });
-
-
+    // store data on selected class
+    app.post('/selectedclasses', verifyJWT, async (req, res) => {
+      const selectedClass = req.body;
+      const query = {name: selectedClass.name, email:selectedClass.email}
+      const existingClass = await selectedClassesCollection.findOne(query);
+      if (existingClass) {
+        return res.send({ message: 'Class Already Exist' })
+      }
+      const result = await selectedClassesCollection.insertOne(selectedClass);
+      res.send(result);
+    });
+     // get selected classes to specific user
+     app.get('/selectedclasses',verifyJWT, async (req, res) => {
+      const email = req.query.email;
+      if(req.decoded.email === email){
+        const query ={email: email}
+        const result = await selectedClassesCollection.find(query).toArray();
+        res.send(result);
+      }
+    });
 
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
