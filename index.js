@@ -58,11 +58,11 @@ async function run() {
       }
       next();
     }
-    const verifyinstractor = async (req, res, next) => {
+    const verifyinstructor = async (req, res, next) => {
       const email = req.decoded.email;
       const query = { email: email }
       const user = await usersCollection.findOne(query);
-      if (user?.role !== 'instractor') {
+      if (user?.role !== 'instructor') {
         return res.status(403).send({ error: true, message: 'forbidden message' });
       }
       next();
@@ -72,6 +72,10 @@ async function run() {
     //load all users
     app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
       const result = await usersCollection.find().toArray();
+      res.send(result);
+    });
+    app.get('/instructor', async (req, res) => {
+      const result = await usersCollection.find({ role: 'instructor' }).toArray();
       res.send(result);
     });
 
@@ -100,17 +104,17 @@ async function run() {
       const result = { admin: user?.role === 'admin' }
       res.send(result);
     });
-    // check instractor
-    app.get('/users/instractor/:email', verifyJWT, async (req, res) => {
+    // check instructor
+    app.get('/users/instructor/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
 
       if (req.decoded.email !== email) {
-        res.send({ instractor: false })
+        res.send({ instructor: false })
       }
 
       const query = { email: email }
       const user = await usersCollection.findOne(query);
-      const result = { instractor: user?.role === 'instractor' }
+      const result = { instructor: user?.role === 'instructor' }
       res.send(result);
     });
 
@@ -127,13 +131,13 @@ async function run() {
       res.send(result);
     });
 
-    //make instractor
-    app.patch('/users/instractor/:id', async (req, res) => {
+    //make instructor
+    app.patch('/users/instructor/:id', async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) }
       const updateDoc = {
         $set: {
-          role: 'instractor'
+          role: 'instructor'
         },
       };
       const result = await usersCollection.updateOne(filter, updateDoc);
@@ -154,7 +158,7 @@ async function run() {
       res.send(result);
     });
     //insert class
-    app.post('/classes', verifyJWT, verifyinstractor, async (req, res) => {
+    app.post('/classes', verifyJWT, verifyinstructor, async (req, res) => {
       const newItem = req.body;
       const result = await classesCollection.insertOne(newItem);
       res.send(result);
@@ -183,7 +187,7 @@ async function run() {
       const result = await classesCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
-    app.get('/myclasses',verifyJWT,verifyinstractor, async (req, res) => {
+    app.get('/myclasses',verifyJWT,verifyinstructor, async (req, res) => {
       const email = req.query.email;
       if(req.decoded.email === email){
         const query ={email: email}
@@ -202,6 +206,10 @@ async function run() {
         },
       };
       const result = await classesCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+    app.get('/allclasses', async (req, res) => {
+      const result = await classesCollection.find({ status: 'Approved' }).toArray();
       res.send(result);
     });
 
