@@ -86,14 +86,7 @@ async function run() {
       const result = await usersCollection.insertOne(user);
       res.send(result);
     });
-    app.get('/myclasses',verifyJWT,verifyinstractor, async (req, res) => {
-      const email = req.query.email;
-      if(req.decoded.email === email){
-        const query ={email: email}
-        const result = await classesCollection.find(query).toArray();
-        res.send(result);
-      }
-    });
+  
     // check admin
     app.get('/users/admin/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
@@ -185,6 +178,27 @@ async function run() {
       const updateDoc = {
         $set: {
           status: 'Denied'
+        },
+      };
+      const result = await classesCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+    app.get('/myclasses',verifyJWT,verifyinstractor, async (req, res) => {
+      const email = req.query.email;
+      if(req.decoded.email === email){
+        const query ={email: email}
+        const result = await classesCollection.find(query).toArray();
+        res.send(result);
+      }
+    });
+    app.patch('/class/feedback/:id/feedback', async (req, res) => {
+      const id = req.params.id;
+      const feedback = req.body;
+      const value = feedback.feedback
+      const filter = { _id: new ObjectId(id) }
+      const updateDoc = {
+        $set: {
+          feedback: value
         },
       };
       const result = await classesCollection.updateOne(filter, updateDoc);
