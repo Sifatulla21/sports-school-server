@@ -70,7 +70,7 @@ async function run() {
 
     //users related apis
     //load all users
-    app.get('/users',verifyJWT,verifyAdmin, async (req, res) => {
+    app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
@@ -86,8 +86,16 @@ async function run() {
       const result = await usersCollection.insertOne(user);
       res.send(result);
     });
-     // check admin
-     app.get('/users/admin/:email', verifyJWT, async (req, res) => {
+    app.get('/myclasses',verifyJWT,verifyinstractor, async (req, res) => {
+      const email = req.query.email;
+      if(req.decoded.email === email){
+        const query ={email: email}
+        const result = await classesCollection.find(query).toArray();
+        res.send(result);
+      }
+    });
+    // check admin
+    app.get('/users/admin/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
 
       if (req.decoded.email !== email) {
@@ -99,8 +107,8 @@ async function run() {
       const result = { admin: user?.role === 'admin' }
       res.send(result);
     });
-     // check instractor
-     app.get('/users/instractor/:email', verifyJWT, async (req, res) => {
+    // check instractor
+    app.get('/users/instractor/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
 
       if (req.decoded.email !== email) {
@@ -148,12 +156,12 @@ async function run() {
 
     //class related apis
     //load all classes on admin
-    app.get('/classes',verifyJWT,verifyAdmin, async (req, res) => {
+    app.get('/classes', verifyJWT, verifyAdmin, async (req, res) => {
       const result = await classesCollection.find().toArray();
-      res.send(result); 
+      res.send(result);
     });
     //insert class
-    app.post('/classes',verifyJWT,verifyinstractor, async(req,res) => {
+    app.post('/classes', verifyJWT, verifyinstractor, async (req, res) => {
       const newItem = req.body;
       const result = await classesCollection.insertOne(newItem);
       res.send(result);
@@ -182,6 +190,8 @@ async function run() {
       const result = await classesCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
+
+
 
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
