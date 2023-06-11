@@ -26,6 +26,7 @@ const verifyJWT = (req, res, next) => {
 }
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const e = require('express');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.vmx0jtd.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -91,7 +92,7 @@ async function run() {
       const result = await usersCollection.insertOne(user);
       res.send(result);
     });
-  
+
     // check admin
     app.get('/users/admin/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
@@ -189,13 +190,38 @@ async function run() {
       res.send(result);
     });
     // get data to instractor
-    app.get('/myclasses',verifyJWT,verifyinstructor, async (req, res) => {
+    app.get('/myclasses', verifyJWT, verifyinstructor, async (req, res) => {
       const email = req.query.email;
-      if(req.decoded.email === email){
-        const query ={email: email}
+      if (req.decoded.email === email) {
+        const query = { email: email }
         const result = await classesCollection.find(query).toArray();
         res.send(result);
       }
+    });
+    // get class by id to update
+    app.get('/getupdateclass/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await classesCollection.findOne(query);
+      res.send(result);
+    });
+    // update class
+    app.put('/updateclass/:id',verifyJWT, verifyinstructor, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updatedclass = req.body;
+      const setupdatedclass = {
+        $set: {
+          name  : updatedclass.name,
+          iName : updatedclass.iName,
+          email : updatedclass.email,
+          price : updatedclass.price,
+          seat  : updatedclass.seat
+        },
+      };
+      const result = await classesCollection.updateOne(filter, setupdatedclass);
+      res.send(result);
     });
     // set feedback
     app.patch('/class/feedback/:id/feedback', async (req, res) => {
@@ -215,11 +241,11 @@ async function run() {
     app.get('/allclasses', async (req, res) => {
       const result = await classesCollection.find({ status: 'Approved' }).toArray();
       res.send(result);
-    }); 
+    });
     // store data on selected class
     app.post('/selectedclasses', verifyJWT, async (req, res) => {
       const selectedClass = req.body;
-      const query = {name: selectedClass.name, email:selectedClass.email}
+      const query = { name: selectedClass.name, email: selectedClass.email }
       const existingClass = await selectedClassesCollection.findOne(query);
       if (existingClass) {
         return res.send({ message: 'Class Already Exist' })
@@ -227,11 +253,11 @@ async function run() {
       const result = await selectedClassesCollection.insertOne(selectedClass);
       res.send(result);
     });
-     // get selected classes to specific user
-     app.get('/selectedclasses',verifyJWT, async (req, res) => {
+    // get selected classes to specific user
+    app.get('/selectedclasses', verifyJWT, async (req, res) => {
       const email = req.query.email;
-      if(req.decoded.email === email){
-        const query ={email: email}
+      if (req.decoded.email === email) {
+        const query = { email: email }
         const result = await selectedClassesCollection.find(query).toArray();
         res.send(result);
       }
