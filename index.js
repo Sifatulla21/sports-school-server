@@ -2,7 +2,8 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
-require('dotenv').config()
+require('dotenv').config();
+const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY);
 const port = process.env.PORT || 5000;
 
 app.use(cors());
@@ -44,6 +45,7 @@ async function run() {
     const usersCollection = client.db("sportsSchool").collection("users");
     const classesCollection = client.db("sportsSchool").collection("classes");
     const selectedClassesCollection = client.db("sportsSchool").collection("selected-classes");
+    const paymentCollection = client.db("sportsSchool").collection("payment");
 
     app.post('/jwt', (req, res) => {
       const user = req.body;
@@ -269,6 +271,42 @@ async function run() {
       const result = await selectedClassesCollection.deleteOne(query);
       res.send(result);
     });
+
+    // payment related api
+
+    // create payment intent
+    app.post('/create-payment-intent', verifyJWT, async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100);
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: 'usd',
+        payment_method_types: ['card']
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret
+      })
+    });
+
+    // get selected class for payment
+    app.get('/payment/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await selectedClassesCollection.findOne(query);
+      res.send(result);
+    });
+
+    // post payment info
+    app.post('/payments', verifyJWT, async (req, res) => {
+      const payment = req.body;
+      const insertResult = await paymentCollection.insertOne(payment);
+      const query = { name: payment.className, email: payment.email }
+      const deleteResult = await selectedClassesCollection.deleteOne(query)
+
+      res.send({ insertResult, deleteResult });
+    })
+
 
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
