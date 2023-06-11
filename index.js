@@ -215,7 +215,7 @@ async function run() {
     app.get('/allclasses', async (req, res) => {
       const result = await classesCollection.find({ status: 'Approved' }).toArray();
       res.send(result);
-    });
+    }); 
     // store data on selected class
     app.post('/selectedclasses', verifyJWT, async (req, res) => {
       const selectedClass = req.body;
@@ -235,6 +235,13 @@ async function run() {
         const result = await selectedClassesCollection.find(query).toArray();
         res.send(result);
       }
+    });
+    // delete selected class
+    app.delete('/selectedclasses/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await selectedClassesCollection.deleteOne(query);
+      res.send(result);
     });
 
     // Connect the client to the server	(optional starting in v4.7)
