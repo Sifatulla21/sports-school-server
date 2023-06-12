@@ -305,7 +305,25 @@ async function run() {
       const deleteResult = await selectedClassesCollection.deleteOne(query)
 
       res.send({ insertResult, deleteResult });
-    })
+    });
+        // get enroled class
+        app.get('/enroledclasses',verifyJWT, async (req, res) => {
+          const email = req.query.email;
+          if (req.decoded.email === email) {
+            const query = { email: email }
+            const result = await paymentCollection.find(query).toArray();
+            res.send(result);
+          }
+        });
+        // get payment info
+        app.get('/paymenthistory',verifyJWT, async (req, res) => {
+          const email = req.query.email;
+          if (req.decoded.email === email) {
+            const query = { email: email }
+            const result = await paymentCollection.find(query).toArray();
+            res.send(result);
+          }
+        });
 
 
     // Connect the client to the server	(optional starting in v4.7)
