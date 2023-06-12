@@ -328,7 +328,7 @@ async function run() {
       const email = req.query.email;
       if (req.decoded.email === email) {
         const query = { email: email }
-        const result = await paymentCollection.find(query).toArray();
+        const result = await (await paymentCollection.find(query).toArray()).reverse();
         res.send(result);
       }
     });
