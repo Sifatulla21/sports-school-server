@@ -208,18 +208,18 @@ async function run() {
       res.send(result);
     });
     // update class
-    app.put('/updateclass/:id',verifyJWT, verifyinstructor, async (req, res) => {
+    app.put('/updateclass/:id', verifyJWT, verifyinstructor, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const options = { upsert: true };
       const updatedclass = req.body;
       const setupdatedclass = {
         $set: {
-          name  : updatedclass.name,
-          iName : updatedclass.iName,
-          email : updatedclass.email,
-          price : updatedclass.price,
-          seat  : updatedclass.seat
+          name: updatedclass.name,
+          iName: updatedclass.iName,
+          email: updatedclass.email,
+          price: updatedclass.price,
+          seat: updatedclass.seat
         },
       };
       const result = await classesCollection.updateOne(filter, setupdatedclass);
@@ -300,30 +300,38 @@ async function run() {
     // post payment info
     app.post('/payments', verifyJWT, async (req, res) => {
       const payment = req.body;
-      const insertResult = await paymentCollection.insertOne(payment);
-      const query = { name: payment.className, email: payment.email }
-      const deleteResult = await selectedClassesCollection.deleteOne(query)
+      const increaseSeat = payment.seat;
+      const updateDoc = {
 
-      res.send({ insertResult, deleteResult });
+        $inc: { seat: -1, enrolled: 1 }
+
+      };
+      const query = { name: payment.className, email: payment.email };
+      const filter = { name: payment.className };
+      const insertResult = await paymentCollection.insertOne(payment);
+      const deleteResult = await selectedClassesCollection.deleteOne(query)
+      const updateClass = await classesCollection.updateOne(filter, updateDoc);
+
+      res.send({ insertResult, deleteResult, updateClass });
     });
-        // get enroled class
-        app.get('/enroledclasses',verifyJWT, async (req, res) => {
-          const email = req.query.email;
-          if (req.decoded.email === email) {
-            const query = { email: email }
-            const result = await paymentCollection.find(query).toArray();
-            res.send(result);
-          }
-        });
-        // get payment info
-        app.get('/paymenthistory',verifyJWT, async (req, res) => {
-          const email = req.query.email;
-          if (req.decoded.email === email) {
-            const query = { email: email }
-            const result = await paymentCollection.find(query).toArray();
-            res.send(result);
-          }
-        });
+    // get enroled class
+    app.get('/enroledclasses', verifyJWT, async (req, res) => {
+      const email = req.query.email;
+      if (req.decoded.email === email) {
+        const query = { email: email }
+        const result = await paymentCollection.find(query).toArray();
+        res.send(result);
+      }
+    });
+    // get payment info
+    app.get('/paymenthistory', verifyJWT, async (req, res) => {
+      const email = req.query.email;
+      if (req.decoded.email === email) {
+        const query = { email: email }
+        const result = await paymentCollection.find(query).toArray();
+        res.send(result);
+      }
+    });
 
 
     // Connect the client to the server	(optional starting in v4.7)
