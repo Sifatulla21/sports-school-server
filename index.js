@@ -82,6 +82,10 @@ async function run() {
       const result = await usersCollection.find({ role: 'instructor' }).toArray();
       res.send(result);
     });
+    app.get('/popularinstructor', async (req, res) => {
+      const result = await usersCollection.find({ role: 'instructor' }).limit(6).toArray();
+      res.send(result);
+    });
 
     //insert user
     app.post('/users', async (req, res) => {
@@ -156,6 +160,11 @@ async function run() {
     });
 
     //class related apis
+        //load all classes on homepage based on popularity
+        app.get('/popularclasses', async (req, res) => {
+          const result = await classesCollection.find().sort({ enrolled: -1 }).limit(6).toArray();
+          res.send(result);
+        });
     //load all classes on admin
     app.get('/classes', verifyJWT, verifyAdmin, async (req, res) => {
       const result = await classesCollection.find().toArray();
